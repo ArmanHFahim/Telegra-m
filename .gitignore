@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Session files
+*.session
+*.session-journal
+
+# Log files
+*.log
+telegram_checker*.log
+
+# Checkpoint files
+checkpoint_*.csv
+
+# Config files
+config.pkl
+*.pkl
+
+# Output folders
+checked_results/
+results/
+photos/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
