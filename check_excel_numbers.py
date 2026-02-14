@@ -7,6 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
 import asyncio
 import pandas as pd
 import logging
@@ -23,7 +27,7 @@ from telethon.tl.types import InputPhoneContact
 #                     CONFIG
 # ────────────────────────────────────────────────
 
-API_ID = int(os.getenv("API_ID", 37597265))int(os.getenv("API_ID", 37597265))
+API_ID = int(os.getenv("API_ID", 37597265))int(os.getenv("API_ID", 37597265))int(os.getenv("API_ID", 37597265))
 API_HASH = os.getenv("API_HASH", "650a8b45cb705150a2d3bb7f6cd41bee")
 SESSION_NAME = "checker_session_v4"
 
