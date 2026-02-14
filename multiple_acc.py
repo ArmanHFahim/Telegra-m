@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # multipule_acc.py
-# Updated: detailed logging for every step + batch summaries
+# Updated 2026-01-31: fixed TypeError in finally block → removed invalid await on is_connected()
 
 import os
 import asyncio
@@ -25,25 +25,25 @@ INPUT_EXCEL    = Path("bd_numbers_state.xlsx")
 OUTPUT_BASE    = Path("checked_results")
 OUTPUT_BASE.mkdir(exist_ok=True)
 
-BATCH_SIZE     = 20             # fixed to 20 as requested
+BATCH_SIZE     = 20             # your requested batch size
 SLEEP_BASE     = 8
 SLEEP_JITTER   = 12
 MAX_RETRIES    = 2
 
 # ────────────────────────────────────────────────
-#               YOUR ACCOUNTS (all 10)
+#               YOUR ACCOUNTS
 # ────────────────────────────────────────────────
 ACCOUNTS = [
-    {"id": 1,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_01"},
-    {"id": 2,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_02"},
-    {"id": 3,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_03"},
-    {"id": 4,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_04"},
-    {"id": 5,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_05"},
-    {"id": 6,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_06"},
-    {"id": 7,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_07"},
-    {"id": 8,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_08"},
-    {"id": 9,  "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_09"},
-    {"id": 10, "api_id": 37597265, "api_hash": "650a8b45cb705150a2d3bb7f6cd41bee", "session": "checker_10"},
+    {"id": 1,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_01"},
+    {"id": 2,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_02"},
+    {"id": 3,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_03"},
+    # {"id": 4,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_04"},
+    # {"id": 5,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_05"},
+    # {"id": 6,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_06"},
+    # {"id": 7,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_07"},
+    # {"id": 8,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_08"},
+    # {"id": 9,  "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_09"},
+    # {"id": 10, "api_id": int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_10"},
 ]
 
 # ────────────────────────────────────────────────
@@ -97,7 +97,7 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
     api_hash = account["api_hash"]
 
     logger = get_logger(acc_id)
-    logger.info(f"Worker {worker_index} (ACC {acc_id}) STARTED | Total numbers assigned: {len(phone_list):,}")
+    logger.info(f"Worker {worker_index} started | {len(phone_list)} numbers assigned")
 
     checkpoint_file = Path(f"checkpoint_acc{acc_id}.csv")
     temp_output = OUTPUT_BASE / f"yes_acc{acc_id}.xlsx"
@@ -111,18 +111,17 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
             already_checked = set(df['phone'].dropna())
             if 'batch_end_local_idx' in df.columns:
                 start_from = int(df['batch_end_local_idx'].max()) + 1
-            logger.info(f"Resume loaded | Already checked: {len(already_checked):,} | Starting from index {start_from}")
+            logger.info(f"Resuming → already checked: {len(already_checked)}, from index {start_from}")
         except Exception as e:
-            logger.error(f"Checkpoint load failed: {e}")
+            logger.error(f"Cannot load checkpoint: {e}")
 
     phones_to_check = [p for p in phone_list[start_from:] if p not in already_checked]
-    total_to_check = len(phones_to_check)
 
-    if total_to_check == 0:
-        logger.info("No new numbers to check → worker finished early")
+    if not phones_to_check:
+        logger.info("No new numbers to check.")
         return
 
-    logger.info(f"Numbers to process this run: {total_to_check:,} | Batches expected: {(total_to_check + BATCH_SIZE - 1) // BATCH_SIZE}")
+    logger.info(f"Numbers left to check: {len(phones_to_check)}")
 
     client = TelegramClient(session_name, api_id, api_hash)
 
@@ -130,20 +129,16 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
         try:
             await client.connect()
             if not await client.is_user_authorized():
-                logger.error("Session is NOT authorized! Please run client.start() manually for this session first.")
+                logger.error("Session NOT authorized! Run client.start() manually first.")
                 return
 
-            logger.info("Telegram session connected and authorized successfully")
+            logger.info("Connected & authorized → checking started")
 
-            total_yes_this_run = 0
-            batch_count = 0
+            total_yes = 0
 
-            for i in range(0, total_to_check, BATCH_SIZE):
-                batch_idx = batch_count + 1
+            for batch_idx, i in enumerate(range(0, len(phones_to_check), BATCH_SIZE)):
                 batch = phones_to_check[i : i + BATCH_SIZE]
                 offset = start_from + i
-
-                logger.info(f"Batch {batch_idx} started | Sending {len(batch)} numbers")
 
                 contacts = [
                     InputPhoneContact(
@@ -155,7 +150,6 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
                     for j, phone in enumerate(batch)
                 ]
 
-                success = False
                 for attempt in range(1, MAX_RETRIES + 1):
                     try:
                         result = await client(ImportContactsRequest(contacts))
@@ -163,7 +157,6 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
 
                         checked_records = []
                         yes_records = []
-                        batch_yes = 0
 
                         for phone in batch:
                             user = found.get(phone)
@@ -181,24 +174,19 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
                                     "status": "YES"
                                 })
                                 yes_records.append(record)
-                                batch_yes += 1
-                                total_yes_this_run += 1
+                                total_yes += 1
                                 logger.info(f"YES → +{phone}  @{user.username or 'no-username'}")
                             else:
                                 record["status"] = "NO"
-                                # logger.debug(f"NO → +{phone}")
 
                             checked_records.append(record)
 
-                        logger.info(f"Batch {batch_idx} finished | Found {batch_yes} YES in this batch")
-
-                        # Cleanup contacts
+                        # Cleanup
                         if result.users:
                             try:
                                 await client(DeleteContactsRequest([u.id for u in result.users]))
-                                logger.debug("Contacts cleaned up successfully")
-                            except Exception as cleanup_e:
-                                logger.warning(f"Cleanup failed: {cleanup_e}")
+                            except:
+                                pass
 
                         # Save checkpoint
                         if checked_records:
@@ -211,9 +199,8 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
                             else:
                                 df = df_new
                             df.to_csv(checkpoint_file, index=False, encoding='utf-8')
-                            logger.debug("Checkpoint saved")
 
-                        # Save YES results
+                        # Save YES
                         if yes_records:
                             df_yes = pd.DataFrame(yes_records)
                             if temp_output.is_file():
@@ -225,59 +212,53 @@ def worker(account: dict, phone_list: List[str], worker_index: int):
                             else:
                                 df_final = df_yes
                             df_final.to_excel(temp_output, index=False, engine='openpyxl')
-                            logger.debug(f"Saved {len(yes_records)} new YES results")
 
-                        success = True
-
-                        # Sleep only if more batches remain
-                        if i + BATCH_SIZE < total_to_check:
+                        # Sleep between batches
+                        if i + BATCH_SIZE < len(phones_to_check):
                             sleep_sec = max(10, SLEEP_BASE + random.uniform(-SLEEP_JITTER, SLEEP_JITTER))
-                            logger.info(f"Waiting {sleep_sec:.1f}s before next batch...")
+                            logger.info(f"Batch {batch_idx+1} done → sleep {sleep_sec:.1f}s")
                             await asyncio.sleep(sleep_sec)
 
                         break
 
                     except errors.FloodWaitError as e:
                         wait = e.seconds + random.randint(30, 90)
-                        logger.warning(f"FLOOD WAIT {e.seconds}s → sleeping {wait}s (attempt {attempt}/{MAX_RETRIES})")
+                        logger.warning(f"Flood wait {e.seconds}s → sleeping {wait}s (attempt {attempt})")
                         await asyncio.sleep(wait)
                     except Exception as e:
-                        logger.error(f"Batch {batch_idx} error (attempt {attempt}): {type(e).__name__} → {e}")
+                        logger.error(f"Batch error (attempt {attempt}): {type(e).__name__} → {e}")
                         if attempt == MAX_RETRIES:
-                            logger.warning(f"Batch {batch_idx} skipped after max retries")
                             break
                         await asyncio.sleep(40 * attempt)
 
-                batch_count += 1
-
-            logger.info(f"Worker {worker_index} (ACC {acc_id}) COMPLETED")
-            logger.info(f"Total YES found this run: {total_yes_this_run:,} / {total_to_check:,} checked")
+            logger.info(f"Worker {worker_index} finished | Found YES: {total_yes:,}")
 
         except Exception as e:
-            logger.error(f"Critical worker error: {type(e).__name__} → {e}", exc_info=True)
+            logger.error(f"Critical error: {e}", exc_info=True)
         finally:
-            if await client.is_connected():
+            # FIXED: no await on is_connected() — it's synchronous
+            if client.is_connected():
                 await client.disconnect()
-                logger.info("Telegram client disconnected")
+                logger.info("Client disconnected")
 
     asyncio.run(run_check())
 
 
 # ────────────────────────────────────────────────
 def main():
-    print("\n" + "═"*80)
-    print("   TELEGRAM BULK CHECKER  —  Batch size = 20  —  Detailed logging enabled")
-    print("═"*80 + "\n")
+    print("\n" + "═"*70)
+    print("   Telegram Bulk Checker  —  Batch size = 20")
+    print("═"*70 + "\n")
 
     if not INPUT_EXCEL.is_file():
         print(f"ERROR → Input file not found: {INPUT_EXCEL.absolute()}")
         return
 
-    print(f"Reading input file: {INPUT_EXCEL.absolute()}")
+    print(f"Reading: {INPUT_EXCEL.absolute()}")
     try:
         df = pd.read_excel(INPUT_EXCEL)
     except Exception as e:
-        print(f"Cannot read Excel file: {e}")
+        print(f"Cannot read Excel: {e}")
         return
 
     print(f"Rows: {len(df):,} | Columns: {list(df.columns)}")
@@ -288,29 +269,27 @@ def main():
 
     all_phones = [normalize_phone(x) for x in df["phone"] if normalize_phone(x) is not None]
     all_phones = list(dict.fromkeys(all_phones))
-    print(f"\nTotal unique valid phones after normalization: {len(all_phones):,}")
+    print(f"\nTotal unique valid phones: {len(all_phones):,}")
 
     if len(all_phones) == 0:
-        print("\n!!! NO VALID PHONE NUMBERS FOUND !!!")
+        print("\n!!! NO VALID NUMBERS FOUND !!!")
         return
 
     n_workers = len(ACCOUNTS)
     if n_workers == 0:
-        print("ERROR: No accounts defined in ACCOUNTS list")
+        print("ERROR: No accounts defined")
         return
 
     chunk_size = max(1, (len(all_phones) + n_workers - 1) // n_workers)
     chunks = [all_phones[i:i + chunk_size] for i in range(0, len(all_phones), chunk_size)]
 
-    print(f"\nLaunching {n_workers} parallel workers (~{chunk_size:,} numbers each)")
-    print(f"Each worker will process in batches of {BATCH_SIZE} numbers\n")
+    print(f"\nLaunching {n_workers} workers (~{chunk_size:,} numbers each)\n")
 
     processes = []
     for idx, (acc, chunk) in enumerate(zip(ACCOUNTS, chunks), 1):
         if not chunk:
-            print(f"Worker {idx} → no numbers assigned (skipping)")
+            print(f"Worker {idx} → no numbers")
             continue
-        print(f"Starting Worker {idx} (ACC {acc['id']}) with {len(chunk):,} numbers")
         p = mp.Process(target=worker, args=(acc, chunk, idx))
         processes.append(p)
         p.start()
@@ -319,15 +298,14 @@ def main():
         for p in processes:
             p.join()
     except KeyboardInterrupt:
-        print("\nInterrupted by user → terminating all workers...")
+        print("\nInterrupted → terminating workers...")
         for p in processes:
             p.terminate()
 
-    print("\n" + "═"*80)
-    print("All workers finished.")
-    print(f"Check results in folder: {OUTPUT_BASE}")
-    print("Each account's YES results saved in yes_accX.xlsx")
-    print("═"*80 + "\n")
+    print("\n" + "═"*70)
+    print("Finished.")
+    print(f"YES results → folder: {OUTPUT_BASE}")
+    print("═"*70)
 
 
 if __name__ == "__main__":
