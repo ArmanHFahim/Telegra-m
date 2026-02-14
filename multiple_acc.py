@@ -10,6 +10,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 # multipule_acc.py
 # Updated 2026-01-31: fixed TypeError in finally block → removed invalid await on is_connected()
 
@@ -42,16 +46,16 @@ MAX_RETRIES    = 2
 #               YOUR ACCOUNTS
 # ────────────────────────────────────────────────
 ACCOUNTS = [
-    {"id": 1,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_01"},
-    {"id": 2,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_02"},
-    {"id": 3,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_03"},
-    # {"id": 4,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_04"},
-    # {"id": 5,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_05"},
-    # {"id": 6,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_06"},
-    # {"id": 7,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_07"},
-    # {"id": 8,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_08"},
-    # {"id": 9,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_09"},
-    # {"id": 10, "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_10"},
+    {"id": 1,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_01"},
+    {"id": 2,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_02"},
+    {"id": 3,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_03"},
+    # {"id": 4,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_04"},
+    # {"id": 5,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_05"},
+    # {"id": 6,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_06"},
+    # {"id": 7,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_07"},
+    # {"id": 8,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_08"},
+    # {"id": 9,  "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_09"},
+    # {"id": 10, "api_id": int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID"))int(os.getenv("API_ID")), "api_hash": os.getenv("API_HASH"), "session": "checker_10"},
 ]
 
 # ────────────────────────────────────────────────
