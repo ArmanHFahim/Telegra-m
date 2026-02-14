@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 📡 TeleRadar - Telegram Bulk Phone Number Checker
+=======
+# 📞 Telegram Bulk Phone Number Checker
+>>>>>>> 117bf0ec3c2781524d8347fe9330b8d7cbd5cb67
 
 A powerful tool to check if phone numbers from Excel files are registered on Telegram.
 
@@ -17,15 +21,23 @@ A powerful tool to check if phone numbers from Excel files are registered on Tel
 
 ## 🛠️ Installation
 
+<<<<<<< HEAD
 \`\`\`bash
 # 1. Clone the repository
 git clone https://github.com/ArmanHFahim/TeleRadar.git
 cd TeleRadar
+=======
+```bash
+# 1. Clone the repository
+git clone https://github.com/ArmanHFahim/Telegra-m.git
+cd Telegra-m
+>>>>>>> 117bf0ec3c2781524d8347fe9330b8d7cbd5cb67
 
 # 2. Install required packages
 pip install -r requirements.txt
 
 # 3. Create .env file with your API credentials
+<<<<<<< HEAD
 cp .env.example .env
 # Then edit .env with your actual API credentials
 \`\`\`
@@ -119,3 +131,6 @@ Feel free to fork this repository and submit pull requests.
 
 ## 📜 License
 This project is open source and available under the MIT License.
+=======
+# (already created with the command above)
+>>>>>>> 117bf0ec3c2781524d8347fe9330b8d7cbd5cb67
